@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>➕ Nueva Venta</h2>
+
+<form method="post">
+    {% csrf_token %}
+    <div class="form-group mb-3">
+        <label>Cliente:</label>
+        {{ form.cliente }}
+    </div>
+
+    <h4>Detalles de la Venta</h4>
+    <table class="table" id="detalles-table">
+        <thead>
+            <tr>
+                <th>Producto</th>
+                <th>Cantidad</th>
+                <th>Precio Unitario</th>
+                <th>Subtotal</th>
+                <th><button type="button" id="add-row" class="btn btn-sm btn-primary">➕ Agregar</button></th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Aquí se agregarán las filas dinámicamente -->
+        </tbody>
+    </table>
+
+    <div class="mb-3">
+        <strong>Total: $<span id="total">0.00</span></strong>
+    </div>
+
+    <button type="submit" class="btn btn-primary">💾 Guardar Venta</button>
+    <a href="{% url 'ventas_list' %}" class="btn btn-secondary">Cancelar</a>
+</form>
+
+<script>
+    const productos = {{ productos_json|safe }};  // Lista de productos con precio y stock desde la vista
+    let detalles = [];
+
+    function calcularSubtotal(cantidad, precio) {
+        return (cantidad * precio).toFixed(2);
+    }
+
+    function actualizarTotal() {
+        
+        let total = 0;
+        document.querySelectorAll('#detalles-table tbody tr').forEach(tr => {
+        const inputSubtotal = tr.querySelector('input[name="subtotal"]');
+        if (inputSubtotal) {
+            total += parseFloat(inputSubtotal.value) || 0;
+        }
+            
+    });
+
+        document.getElementById('total').textContent = total.toFixed(2);
+    }
+
+    function crearFilaDetalle() {
+        const tbody = document.querySelector('#detalles-table tbody');
+        const tr = document.createElement('tr');
+
+        // Producto select
+        const tdProducto = document.createElement('td');
+        const select = document.createElement('select');
+        select.name = 'producto';
+        select.classList.add('form-select');
+        productos.forEach(p => {
+            const option = document.createElement('option');
+            option.value = p.id;
+            option.textContent = p.nombre;
+            option.dataset.precio = p.precio;
+            option.dataset.stock = p.stock;
+            select.appendChild(option);
+        });
+        tdProducto.appendChild(select);
+        tr.appendChild(tdProducto);
+
+        // Cantidad input
+        const tdCantidad = document.createElement('td');
+        const inputCantidad = document.createElement('input');
+        inputCantidad.type = 'number';
+        inputCantidad.name = 'cantidad';
+        inputCantidad.min = 1;
+        inputCantidad.value = 1;
+        inputCantidad.classList.add('form-control');
+        tdCantidad.appendChild(inputCantidad);
+        tr.appendChild(tdCantidad);
+
+        // Precio unitario (readonly)
+        const tdPrecio = document.createElement('td');
+        const inputPrecio = document.createElement('input');
+        inputPrecio.type = 'text';
+        inputPrecio.name = 'precio_unitario';
+        inputPrecio.readOnly = true;
+        inputPrecio.classList.add('form-control');
+        inputPrecio.value = select.selectedOptions[0].dataset.precio;
+        tdPrecio.appendChild(inputPrecio);
+        tr.appendChild(tdPrecio);
+
+        // Subtotal (readonly)
+        const tdSubtotal = document.createElement('td');
+        const inputSubtotal = document.createElement('input');
+        inputSubtotal.type = 'text';
+        inputSubtotal.name = 'subtotal';
+        inputSubtotal.readOnly = true;
+        inputSubtotal.classList.add('form-control');
+        inputSubtotal.value = calcularSubtotal(inputCantidad.value, inputPrecio.value);
+        tdSubtotal.appendChild(inputSubtotal);
+        tr.appendChild(tdSubtotal);
+
+        // Botón eliminar fila
+        const tdEliminar = document.createElement('td');
+        const btnEliminar = document.createElement('button');
+        btnEliminar.type = 'button';
+        btnEliminar.classList.add('btn', 'btn-danger', 'btn-sm');
+        btnEliminar.textContent = '❌';
+        btnEliminar.onclick = () => {
+            tr.remove();
+            actualizarTotal();
+        };
+        tdEliminar.appendChild(btnEliminar);
+        tr.appendChild(tdEliminar);
+
+        // Eventos para actualizar precios y subtotales
+        select.onchange = () => {
+            inputPrecio.value = select.selectedOptions[0].dataset.precio;
+            inputSubtotal.value = calcularSubtotal(inputCantidad.value, inputPrecio.value);
+            actualizarTotal();
+        };
+        inputCantidad.oninput = () => {
+            if (inputCantidad.value < 1) inputCantidad.value = 1;
+            inputSubtotal.value = calcularSubtotal(inputCantidad.value, inputPrecio.value);
+            actualizarTotal();
+        };
+
+        tbody.appendChild(tr);
+        actualizarTotal();
+    }
+
+    document.getElementById('add-row').addEventListener('click', crearFilaDetalle);
+
+    // Agregar una fila inicial
+    crearFilaDetalle();
+</script>
+{% endblock %}

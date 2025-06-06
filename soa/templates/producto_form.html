@@ -1,0 +1,48 @@
+<!-- producto_form.html (para create y update) -->
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>{% if object %}✏️ Editar{% else %}➕ Nuevo{% endif %} Producto</h2>
+
+<form method="post">
+    {% csrf_token %}
+    <div class="form-group">
+        <label>Nombre:</label>
+        {{ form.nombre }}
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="form-group">
+                <label>Precio:</label>
+                {{ form.precio }}
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group">
+                <label>Stock:</label>
+                {{ form.stock }}
+            </div>
+        </div>
+    </div>
+    <div class="form-group">
+        <label>Descripción:</label>
+        {{ form.descripcion }}
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="form-group">
+                <label>Fecha Vencimiento:</label>
+                <input type="date" name="fecha_vencimiento" value="{{ form.fecha_vencimiento.value|date:'Y-m-d' }}" class="form-control">
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group">
+                <label>Categoría:</label>
+                {{ form.categoria }}
+            </div>
+        </div>
+    </div>
+    <button type="submit" class="btn btn-primary">💾 Guardar</button>
+    <a href="{% url 'productos_list' %}" class="btn btn-secondary">Cancelar</a>
+</form>
+{% endblock %}

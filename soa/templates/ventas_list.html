@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>🛒 Lista de Ventas</h2>
+<a href="{% url 'venta_create' %}" class="btn btn-success mb-3">➕ Nueva Venta</a>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>ID Venta</th>
+            <th>Cliente</th>
+            <th>Fecha</th>
+            <th>Total</th>
+            <th>Detalles</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for venta in ventas %}
+        <tr>
+            <td>{{ venta.id }}</td>
+            <td>{{ venta.cliente }}</td>
+            <td>{{ venta.fecha_venta|date:"d/m/Y H:i" }}</td>
+            <td>${{ venta.total }}</td>
+            <td>
+                <ul>
+                    {% for detalle in venta.detalles.all %}
+                    <li>{{ detalle.cantidad }} x {{ detalle.producto.nombre }} - ${{ detalle.subtotal }}</li>
+                    {% endfor %}
+                </ul>
+            </td>
+            <td>
+                <a href="{% url 'venta_delete' venta.id %}" class="btn btn-sm btn-danger">🗑️ Eliminar</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="6">No hay ventas registradas</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
